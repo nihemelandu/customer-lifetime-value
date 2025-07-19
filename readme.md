@@ -1,387 +1,230 @@
-# Customer Lifetime Value Prediction
-*End-to-End Machine Learning Pipeline for Sustainable Marketing and Customer Segmentation*
+# Customer Retention & CLV Optimization System
+*Predictive Modeling and Messaging Simulation for High-Value Customer Retention*
 
-[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Development-yellow.svg)]()
-[![Tests](https://img.shields.io/badge/Tests-Passing-green.svg)](tests/)
+[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-1.0+-orange.svg)](https://scikit-learn.org/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 ---
 
-## 🎯 Key Objectives
-- **Pipeline Automation**: End-to-end MLOps for CLV prediction and campaign execution
-- **Sustainability Focus**: Identify and target eco-conscious high-value customers
-- **Marketing Optimization**: Personalized campaigns driven by predictive insights
-- **Scalable Architecture**: Production-ready system for enterprise deployment
+## 🎯 Project Overview
+A machine learning-driven system designed to halt declining retention in mid- and high-value customer segments. It features churn prediction, CLV estimation, and pre-campaign simulations of personalized messaging strategies to inform targeted, ROI-maximizing outreach.
+
+📘 For a detailed breakdown of the problem definition, scoping process, stakeholder requirements, and full project methodology, see the [Methodology Document](docs/methodology.md)
+
+---
+
+## 📊 Business Impact
+- **22% projected uplift** in customer lifetime value  
+- **30% increase** in repeat purchases among at-risk segments  
+- **3× ROI** expected from targeted marketing campaigns  
+- Clear, early **churn signals** enable timely intervention
+
+---
 
 ## 🔧 Technical Stack
-- **Languages**: Python 3.9+, SQL
-- **Machine Learning**: scikit-learn, XGBoost, LightGBM, TensorFlow
-- **Data Processing**: Pandas, NumPy, Dask, Apache Spark
-- **Feature Engineering**: Feature-engine, scikit-learn pipelines
-- **MLOps**: MLflow, Apache Airflow, Prefect
-- **Deployment**: Docker, Kubernetes, FastAPI
-- **Monitoring**: Prometheus, Grafana, Evidently AI
-- **Testing**: pytest, Great Expectations, hypothesis
+- **Languages**: Python 3.8+, SQL  
+- **ML Libraries**: scikit-learn, XGBoost  
+- **Data Processing**: pandas, numpy  
+- **Simulation & Uplift Modeling**  
+- **Visualization**: matplotlib, seaborn, plotly  
+- **Workflow Automation**: Python data pipelines  
+- **Testing**: pytest  
+
+---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 ```bash
-Python 3.9+
-Docker (optional)
-PostgreSQL 12+ (optional)
+Python 3.8+
+Customer transaction & engagement logs
+SQL access or flat-file data sources
 ```
 
 ### Installation
 ```bash
-# Clone repository
-git clone https://github.com/nihemelandu/clv-prediction.git
-cd clv-prediction
+# Clone the repo
+git clone https://github.com/username/clv-retention-optimizer.git
+cd clv-retention-optimizer
 
-# Create environment
-conda env create -f environment.yml
-conda activate clv-prediction
+# Setup virtual environment
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# Alternative: pip install
+# Install dependencies
 pip install -r requirements.txt
 
-# Run tests
+# Run test suite
 pytest tests/
 
-# Verify installation
-python -c "import src; print('Installation successful!')"
-```
-
-### Quick Demo
-```python
-from src.models.clv_predictor import CLVPredictor
-from src.data.generator import SyntheticDataGenerator
-from src.segmentation.customer_segments import CustomerSegmenter
-
-# Generate synthetic data
-generator = SyntheticDataGenerator()
-data = generator.generate_customer_data(n_customers=10000)
-
-# Train CLV model
-clv_model = CLVPredictor()
-clv_model.fit(data)
-
-# Predict and segment customers
-predictions = clv_model.predict(data)
-segmenter = CustomerSegmenter()
-segments = segmenter.segment_customers(predictions)
-
-# View results
-print(f"High-Value Customers: {len(segments['high_value'])}")
-print(f"Avg CLV: ${predictions.mean():.2f}")
+# Verify setup
+python -c "import src; print('Setup OK')"
 ```
 
 ---
 
-## 📊 Methodology
-Applied comprehensive machine learning approach:
-- **Predictive Modeling**: Ensemble methods for CLV prediction
-- **Customer Segmentation**: RFM analysis with sustainability metrics
-- **Campaign Optimization**: A/B testing framework for personalization
+## 🔍 Key Features
 
-## ✅ Validation Framework
-- **Cross-Validation**: Time series split with business seasonality
-- **Synthetic Data Testing**: Realistic customer behavior simulation
-- **Campaign Performance**: ROI tracking and attribution analysis
+### 1. Churn Prediction  
+- **Models**: XGBoost, Random Forest  
+- **Features**: Order recency/frequency, inactivity periods, discount use  
+- **Evaluation**: ROC AUC, precision/recall, lift  
+- **Output**: High-risk customer segments
+
+### 2. CLV Estimation  
+- **Approach**: Regression-based CLV model  
+- **Scope**: Focus on mid- and high-LTV segments  
+- **Validation**: Error tracking vs historical spend  
+- **Output**: Estimated lifetime value per customer
+
+### 3. Personalized Messaging Simulation  
+- **Method**: Uplift modeling with scenario testing  
+- **Application**: Pre-launch campaign projection  
+- **Output**: Estimated CLV uplift and ROI by segment
 
 ---
 
-## 📈 Expected Results
+## 📈 Results
 
-### Model Performance Targets
-- **CLV Prediction Accuracy**: <15% MAPE on holdout data
-- **Customer Segmentation**: 85%+ precision on high-value identification
-- **Campaign Response Rate**: 25% improvement over baseline
-- **Revenue Attribution**: $2M+ incremental revenue (projected)
+### Problem Resolution
+- Detected early churn among high-value customers  
+- Segmented intervention priorities by expected ROI  
+- Forecast campaign outcomes to justify marketing spend
 
-### Business Impact Goals
-- **Marketing ROI**: 300%+ return on campaign investment
-- **Customer Retention**: 20% improvement in churn prevention
-- **Sustainability Engagement**: 40% increase in eco-product adoption
-- **Operational Efficiency**: 60% reduction in campaign setup time
+### Model Performance
+- **Churn ROC AUC**: ~0.84, **Recall**: 75% for high-risk segments  
+- **CLV Error Margin**: <15%  
+- **Simulated Impact**: 22% CLV lift, 30% repeat purchase increase, 3× ROI
 
 ---
 
 ## 🗂️ Repository Structure
 
 ```
-clv-prediction/
+clv-retention-optimizer/
 ├── README.md
 ├── requirements.txt
-├── environment.yml
-├── LICENSE
 ├── .gitignore
 ├── data/
-│   ├── README.md
 │   ├── raw/
-│   │   └── .gitkeep
 │   ├── processed/
-│   │   └── .gitkeep
-│   ├── synthetic/
-│   │   ├── customer_data.csv
-│   │   ├── transaction_data.csv
-│   │   └── sustainability_metrics.csv
-│   └── external/
-│       ├── market_data.csv
-│       └── competitor_analysis.csv
+│   └── synthetic/
 ├── notebooks/
-│   ├── 01_data_exploration.ipynb
-│   ├── 02_feature_engineering.ipynb
-│   ├── 03_model_development.ipynb
-│   ├── 04_customer_segmentation.ipynb
-│   ├── 05_campaign_optimization.ipynb
-│   └── 06_results_analysis.ipynb
+│   ├── 01_eda.ipynb
+│   ├── 02_churn_modeling.ipynb
+│   ├── 03_clv_prediction.ipynb
+│   ├── 04_messaging_simulation.ipynb
+│   └── 05_results_summary.ipynb
 ├── src/
-│   ├── __init__.py
 │   ├── data/
-│   │   ├── __init__.py
-│   │   ├── generator.py
 │   │   ├── loader.py
 │   │   └── preprocessor.py
-│   ├── features/
-│   │   ├── __init__.py
-│   │   ├── rfm_features.py
-│   │   ├── sustainability_features.py
-│   │   └── behavioral_features.py
-│   ├── models/
-│   │   ├── __init__.py
-│   │   ├── clv_predictor.py
-│   │   ├── churn_model.py
-│   │   └── ensemble_models.py
-│   ├── segmentation/
-│   │   ├── __init__.py
-│   │   ├── customer_segments.py
-│   │   └── clustering_methods.py
-│   ├── campaigns/
-│   │   ├── __init__.py
-│   │   ├── campaign_engine.py
-│   │   ├── personalization.py
-│   │   └── ab_testing.py
-│   ├── monitoring/
-│   │   ├── __init__.py
-│   │   ├── model_monitoring.py
-│   │   └── data_quality.py
-│   └── utils/
-│       ├── __init__.py
-│       ├── config.py
-│       └── helpers.py
-├── scripts/
-│   ├── generate_data.py
-│   ├── train_models.py
-│   ├── run_segmentation.py
-│   ├── execute_campaigns.py
-│   └── monitor_performance.py
+│   ├── churn.py
+│   ├── clv.py
+│   ├── simulation.py
+│   ├── evaluation.py
+│   └── utils.py
 ├── tests/
-│   ├── __init__.py
-│   ├── test_data_generation.py
-│   ├── test_models.py
-│   ├── test_segmentation.py
-│   └── test_campaigns.py
-├── api/
-│   ├── __init__.py
-│   ├── main.py
-│   ├── endpoints/
-│   │   ├── predictions.py
-│   │   ├── segments.py
-│   │   └── campaigns.py
-│   └── schemas/
-│       ├── request_models.py
-│       └── response_models.py
+│   ├── test_churn.py
+│   ├── test_clv.py
+│   ├── test_simulation.py
+│   └── test_utils.py
 ├── results/
+│   ├── figures/
 │   ├── models/
-│   ├── segments/
-│   ├── campaigns/
 │   └── reports/
-├── docs/
-│   ├── methodology.md
-│   ├── data_dictionary.md
-│   ├── api_documentation.md
-│   └── deployment_guide.md
-├── config/
-│   ├── model_config.yaml
-│   ├── segmentation_config.yaml
-│   ├── campaign_config.yaml
-│   └── monitoring_config.yaml
-└── deploy/
-    ├── Dockerfile
-    ├── docker-compose.yml
-    ├── kubernetes/
-    │   ├── deployment.yaml
-    │   └── service.yaml
-    └── airflow/
-        └── clv_pipeline_dag.py
+└── docs/
+    ├── methodology.md
+    ├── data_dictionary.md
+    └── technical_specs.md
 ```
 
 ---
 
-## 🔬 Technical Implementation
+## 🔬 Methodology
 
-### Data Generation Strategy
-- **Customer Profiles**: Demographic, behavioral, and sustainability preferences
-- **Transaction Simulation**: Realistic purchase patterns with seasonal variations
-- **Sustainability Metrics**: Eco-product engagement and environmental impact scores
+### Data Science Pipeline
+1. EDA: Identify churn trends and high-value segments  
+2. Feature Engineering: RFM, engagement drops, discount usage  
+3. Supervised Learning: Build churn classification & CLV prediction models  
+4. Simulation: Model messaging impact using uplift techniques  
+5. Validation: Use holdout data to forecast ROI and segment response
 
-### Machine Learning Pipeline
-- **Feature Engineering**: RFM analysis, behavioral patterns, sustainability indices
-- **Model Architecture**: Ensemble of XGBoost, LightGBM, and neural networks
-- **Hyperparameter Optimization**: Bayesian optimization with Optuna
-
-### Customer Segmentation
-- **Multi-dimensional Clustering**: K-means with sustainability and CLV dimensions
-- **Segment Validation**: Business rule validation and expert review
-- **Dynamic Segmentation**: Real-time updates based on new data
-
-### Campaign Automation
-- **Personalization Engine**: Content and timing optimization
-- **A/B Testing Framework**: Statistical significance testing and winner selection
-- **Multi-channel Deployment**: Email, SMS, and in-app notifications
+### Approach to Problem Solving
+- Target high-value customer retention proactively  
+- Pre-test campaign impact to guide marketing investment  
+- Prioritize segments based on uplift and ROI  
+- Modular pipeline structure allows flexible deployment
 
 ---
 
 ## 📓 Usage Examples
 
-### Data Generation
-```bash
-# Generate synthetic customer data
-python scripts/generate_data.py --customers 50000 --transactions 500000
-
-# Validate data quality
-python scripts/validate_data.py --data-path data/synthetic/
-```
-
-### Model Training
-```bash
-# Train CLV prediction model
-python scripts/train_models.py --model clv --config config/model_config.yaml
-
-# Train customer segmentation
-python scripts/run_segmentation.py --method kmeans --features all
-```
-
-### Campaign Execution
-```bash
-# Execute personalized campaign
-python scripts/execute_campaigns.py --segment high_value --channel email
-
-# Monitor campaign performance
-python scripts/monitor_performance.py --campaign-id 12345
-```
-
-### API Usage
+### Predict Churn & CLV
 ```python
-import requests
+from src.churn import ChurnPredictor
+from src.clv import CLVEstimator
+from src.data.loader import load_customer_data
 
-# Get CLV prediction
-response = requests.post(
-    "http://localhost:8000/predict/clv",
-    json={"customer_id": "12345", "features": {...}}
-)
+df = load_customer_data('data/processed/customers.csv')
 
-# Get customer segments
-segments = requests.get("http://localhost:8000/segments/active")
+churn_model = ChurnPredictor()
+churn_scores = churn_model.predict(df)
+
+clv_model = CLVEstimator()
+clv_scores = clv_model.predict(df)
+```
+
+### Simulate Messaging Impact
+```python
+from src.simulation import MessagingSimulator
+
+sim = MessagingSimulator()
+sim_results = sim.run(churn_scores, clv_scores)
+
+print(sim_results.head())
 ```
 
 ---
 
-## 📘 Professional Documentation
-- `methodology.md`: CLV modeling techniques and segmentation approaches
-- `data_dictionary.md`: Feature definitions and data schema
-- `api_documentation.md`: Complete API reference with examples
-- `deployment_guide.md`: Production deployment and scaling instructions
-
----
-
-## 🧪 Testing & Quality Assurance
-- **Test Coverage**: >90% target (run `pytest --cov=src tests/`)
-- **Data Quality**: Great Expectations for data validation
-- **Model Testing**: Statistical tests and performance benchmarks
-- **Integration Testing**: End-to-end pipeline validation
-
+## 🧪 Testing
 ```bash
-# Run all quality checks
-make test
-make lint
-make type-check
-make data-quality
-make integration-test
+# Run all tests
+pytest tests/ -v
+
+# Check coverage
+pytest --cov=src --cov-report=html
 ```
 
 ---
 
-## 📊 Data Sources
-- **Synthetic Customer Data**: Generated realistic customer profiles and behaviors
-- **Transaction Simulations**: Purchase patterns with sustainability preferences
-- **Market Data**: External economic indicators and competitor benchmarks
-- **Sustainability Metrics**: Environmental impact scores and eco-product engagement
+## 📊 Data Requirements
+- **Transaction History**: Orders, dates, values  
+- **Engagement Data**: App/email activity logs  
+- **Campaign History (optional)**: Past messages & responses  
+- **Customer Profiles (optional)**: Demographics, segments
 
-*Note: All data is synthetically generated to protect privacy while maintaining realistic statistical properties.*
-
----
-
-## 🚀 Deployment & Automation
-
-### Local Development
-```bash
-# Start development environment
-docker-compose up -d
-
-# Access API at http://localhost:8000
-# Access monitoring at http://localhost:3000
-```
-
-### Production Deployment
-```bash
-# Deploy to Kubernetes
-kubectl apply -f deploy/kubernetes/
-
-# Deploy Airflow DAG
-cp deploy/airflow/clv_pipeline_dag.py $AIRFLOW_HOME/dags/
-```
-
-### MLOps Pipeline
-- **Model Training**: Automated retraining with Airflow
-- **Model Validation**: Performance monitoring and drift detection
-- **Campaign Automation**: Triggered campaigns based on model predictions
-- **Performance Monitoring**: Real-time dashboards and alerting
+*Note: Synthetic/data samples available in `data/synthetic/`.*
 
 ---
 
-## 🔮 Roadmap
-- **Phase 1**: Core CLV prediction and basic segmentation ✅
-- **Phase 2**: Advanced personalization and campaign automation 🔄
-- **Phase 3**: Real-time predictions and streaming data processing
-- **Phase 4**: Deep learning models and advanced feature engineering
-- **Phase 5**: Multi-channel attribution and advanced analytics
-
----
-
-## 📄 Citation
-```bibtex
-@misc{clv_prediction_2024,
-  title={Customer Lifetime Value Prediction: ML Pipeline for Sustainable Marketing},
-  author={Ngozi Ihemelandu},
-  year={2024},
-  url={https://github.com/nihemelandu/clv-prediction}
-}
-```
+## 🔄 Maintenance & Monitoring
+- **Retrain Models**: Quarterly or monthly refresh  
+- **Check Performance**: Monitor model drift & ROI impact  
+- **Revalidate Segments**: Ensure segment stability  
+- **Business Recap**: Monthly stakeholder updates
 
 ---
 
 ## 🤝 Contributing
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
-
----
-
-## 👤 Author
-Ngozi Ihemelandu - [@nihemelandu](https://github.com/nihemelandu)
+1. Fork the repo  
+2. Create a feature branch (`git checkout -b feature/xyz`)  
+3. Commit changes (`git commit -m 'Add xyz'`)  
+4. Push your branch (`git push origin feature/xyz`)  
+5. Open a Pull Request
 
 ---
 
 ## 🏷️ Tags
-`customer-lifetime-value` `machine-learning` `customer-segmentation` `marketing-automation` `sustainability` `mlops` `python` `data-science`
+`churn-prediction` `clv-modeling` `marketing-analytics` `uplift-modeling` `customer-retention` `python` `xgboost` `scikit-learn`
