@@ -126,4 +126,40 @@ Predict churn risk in mid- and high-value customer segments and simulate persona
 
 ---
 
+## 1.9 Problem Translation to DS/ML Task
+
+The business problem was translated into two core machine learning tasks, with a supporting simulation component to assess impact before campaign execution.
+
+### 🔹 ML Task 1: Predict Churn Risk
+
+- **Type:** Supervised classification
+- **Goal:** Predict the likelihood that a high- or mid-value customer will churn.
+- **Target Variable:** `churn_label` (binary: 1 = churn, 0 = retained), based on no purchase within a defined inactivity window (e.g., 90 days).
+- **Input Features:** Purchase recency and frequency, product views, email engagement, loyalty tier, customer tenure, previous campaign responses.
+- **Business Use:** Identify at-risk customers early for proactive retention strategies.
+- **Evaluation Metrics:** ROC AUC, recall for high-value churners, precision@k (for targeting efficiency).
+
+### 🔹 ML Task 2: Predict Customer Lifetime Value (CLV)
+
+- **Type:** Supervised regression
+- **Goal:** Estimate expected future revenue from each customer.
+- **Target Variable:** `CLV` (continuous), calculated based on historical revenue and projected behavior.
+- **Input Features:** Historical transactions, average order value, frequency, response to past campaigns, browsing behavior, and segment attributes.
+- **Business Use:** Prioritize customers by value to guide messaging intensity and investment.
+- **Evaluation Metrics:** RMSE, MAPE, relative error margin (≤15%).
+
+### 🔸 Supporting Task: Campaign Simulation
+
+- **Type:** What-if analysis / business simulation
+- **Goal:** Estimate the potential uplift from personalized messaging strategies before campaign execution.
+- **Method:** Use model-predicted churn and CLV scores to simulate targeted engagement vs. control scenarios.
+- **Expected Outcome:** Quantify impact in terms of CLV uplift, repeat purchases, and ROI before real-world rollout.
+
+### 🧩 Assumptions
+
+- Churn and CLV are both labelable from historical behavior with sufficient accuracy.
+- Past behavioral patterns are predictive of future churn and spending.
+- Simulated outcomes from the models can guide campaign design with business-relevant accuracy.
+---
+
 *This section will be iteratively refined as modeling progresses and new stakeholder inputs or constraints emerge.*
