@@ -150,6 +150,95 @@ def clean_data(df):
     
     return cleaned_df
 
+def create_customer_features(df):
+    """
+    Create customer-level features for churn prediction.
+    Aggregates transaction data into customer behavioral metrics.
+    """
+    print("\n🔧 Creating customer features...")
+    
+    # Convert registration_date columns to datetime
+    df['registration_date'] = pd.to_datetime(df['registration_date'])
+    
+    # Calculate analysis date (most recent order date)
+    analysis_date = df['order_date'].max()
+    print(f"   • Analysis date: {analysis_date.strftime('%Y-%m-%d')}")
+    
+    # Group by customer to create features
+    customer_features = df.groupby('customer_id').agg({
+        # Basic customer info
+        'registration_date': 'first',
+        #'customer_segment': 'first',
+        'acquisition_channel': 'first',
+        'account_status': 'first',
+        
+        # Order behavior - RFM metrics
+        'order_date': ['max', 'count'],  # Most recent order, frequency
+        'order_value': ['sum', 'mean', 'std'],  # Monetary metrics
+        'quantity': 'sum',
+        
+        # Product behavior
+        'category': 'nunique',  # Product diversity
+        'unit_price': 'mean',
+        
+        # Promotion usage
+        'discount_percentage': ['mean', 'count']
+    }).reset_index()
+    
+    # Flatten column names
+    customer_features.columns = ['_'.join(col).strip('_') for col in customer_features.columns]
+
+    # Rename columns to meaningful names
+    customer_features = customer_features.rename(columns={
+        'customer_id_': 'customer_id',
+        'order_date_count': 'order_frequency',
+        'order_value_sum': 'total_revenue',
+        'order_value_mean': 'avg_order_value',
+        'order_date_max': 'last_order_date',
+        'registration_date_first': 'registration_date',
+        #'customer_segment_first': 'customer_segment',
+        'acquisition_channel_first': 'acquisition_channel',
+        'account_status_first': 'account_status',
+        'category_nunique': 'product_diversity',     
+    })
+    
+    #RFM is a behavioral segmentation framework.
+    #CLV is a financial metric.
+    #RFM can be used as input features to estimate or model CLV, but RFM ≠ CLV
+    
+    # Calculate RFM features
+    customer_features['days_since_last_order'] = (analysis_date - customer_features['last_order_date']).dt.days
+    customer_features['customer_tenure_days'] = (analysis_date - customer_features['registration_date']).dt.days
+    #customer_features['order_frequency'] = customer_features['total_orders'] / (customer_features['customer_tenure_days'] / 30)  # orders per month
+    
+    # Create risk indicators
+    customer_features['high_value_customer'] = (customer_features['total_revenue'] > customer_features['total_revenue'].quantile(0.8)).astype(int)
+    customer_features['recent_customer'] = (customer_features['customer_tenure_days'] <= 90).astype(int)
+    customer_features['at_risk_recency'] = (customer_features['days_since_last_order'] > 60).astype(int)
+    customer_features['low_frequency'] = (customer_features['order_frequency'] < 1).astype(int)  # less than 1 order per month
+    
+    # Product engagement
+    #customer_features['product_diversity'] = customer_features['category_nunique']
+    customer_features['uses_promotions'] = (customer_features['discount_percentage_count'] > 0).astype(int)
+    customer_features['avg_discount'] = customer_features['discount_percentage_mean'].fillna(0)
+    
+    # Select final feature set
+    feature_columns = [
+        'customer_id', 'acquisition_channel',
+        'account_status', 'days_since_last_order', 'customer_tenure_days',
+        'order_frequency', 'total_revenue', 'avg_order_value', 'order_frequency',
+        'product_diversity', 'high_value_customer', 'recent_customer',
+        'at_risk_recency', 'low_frequency', 'uses_promotions', 'avg_discount'
+    ]
+    
+    final_features = customer_features[feature_columns].copy()
+    
+    print(f"   ✅ Features created for {len(final_features):,} customers")
+    print(f"   📊 Feature set: {len(feature_columns)-1} features")  # -1 for customer_id
+    print("   🎯 Key features: days_since_last_order, total_revenue, order_frequency, product_diversity")
+    
+    return final_features
+
 
 def main():
     # Load the data
@@ -161,13 +250,16 @@ def main():
     # Clean data
     cleaned_df = clean_data(data)
     
-    print("\n✨ Commit 2 complete: Data validation and cleaning pipeline ready!")
-    print(f"📈 Ready for feature engineering with {len(cleaned_df):,} clean records")
+    # Create customer features
+    customer_features = create_customer_features(cleaned_df)
     
-    return cleaned_df, validation_report
+    print("\n✨ Commit 3 complete: Customer feature engineering pipeline ready!")
+    print(f"📈 Ready for model training with {len(customer_features):,} customers and {len(customer_features.columns)-1} features")
+    
+    return customer_features, validation_report
 
 if __name__ == "__main__":
-    cleaned_data, report = main()
+    features, report = main()
     
     
     
