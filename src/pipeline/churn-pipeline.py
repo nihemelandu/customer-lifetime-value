@@ -11,6 +11,10 @@ Created on Tue Aug 19 20:20:10 2025
 
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_auc_score, classification_report
 
 def load_customer_data(file_path='data/synthetic/customer_analytics_master.csv'):
     """
@@ -91,7 +95,7 @@ def validate_data_quality(df):
         'numeric': numeric_cols,
         'text': text_cols
     }
-    
+        
     return validation_report
 
 def clean_data(df):
@@ -114,6 +118,12 @@ def clean_data(df):
     numeric_issues = 0
     
     if 'order_value' in cleaned_df.columns:
+        null_orders = cleaned_df.order_value.isnull().sum()
+        if null_orders > 0:
+            print("removed null orders")
+            print(cleaned_df.shape)
+            cleaned_df = cleaned_df[~cleaned_df.order_value.isnull()]
+            print(cleaned_df.shape)
         negative_orders = (cleaned_df['order_value'] < 0).sum()
         if negative_orders > 0:
             cleaned_df = cleaned_df[cleaned_df['order_value'] >= 0]
@@ -226,7 +236,7 @@ def create_customer_features(df):
     feature_columns = [
         'customer_id', 'acquisition_channel',
         'account_status', 'days_since_last_order', 'customer_tenure_days',
-        'order_frequency', 'total_revenue', 'avg_order_value', 'order_frequency',
+        'total_revenue', 'avg_order_value', 'order_frequency',
         'product_diversity', 'high_value_customer', 'recent_customer',
         'at_risk_recency', 'low_frequency', 'uses_promotions', 'avg_discount'
     ]
@@ -238,6 +248,137 @@ def create_customer_features(df):
     print("   🎯 Key features: days_since_last_order, total_revenue, order_frequency, product_diversity")
     
     return final_features
+
+def create_churn_target(df):
+    """
+    Create churn target variable based on business rules.
+    Define churn as customers who haven't ordered in 90+ days.
+    """
+    print("\n🎯 Creating churn target variable...")
+    
+    # Calculate analysis date (most recent order date)
+    analysis_date = df['order_date'].max()
+    
+    # Group by customer to find last order date
+    customer_last_order = df.groupby('customer_id')['order_date'].max().reset_index()
+    customer_last_order['days_since_last_order'] = (analysis_date - customer_last_order['order_date']).dt.days
+    
+    # Define churn: customers inactive for 90+ days
+    churn_threshold = 90
+    customer_last_order['churned'] = (customer_last_order['days_since_last_order'] >= churn_threshold).astype(int)
+    
+    churn_rate = customer_last_order['churned'].mean()
+    print(f"   • Churn threshold: {churn_threshold} days")
+    print(f"   • Churn rate: {churn_rate:.1%}")
+    
+    return customer_last_order[['customer_id', 'churned']]
+
+def prepare_model_data(features_df, churn_df):
+    """
+    Prepare features and target for machine learning model.
+    Handle categorical encoding and feature selection.
+    """
+    print("\n🔧 Preparing data for modeling...")
+    
+    # Merge features with churn target
+    model_data = features_df.merge(churn_df, on='customer_id', how='inner')
+    
+    # Select numeric features for baseline model
+    numeric_features = [
+        'days_since_last_order', 'customer_tenure_days',
+        'total_revenue', 'avg_order_value', 'order_frequency',
+        'product_diversity', 'avg_discount'
+    ]
+    
+    # Add binary features (already 0/1)
+    binary_features = [
+        'high_value_customer', 'recent_customer', 'at_risk_recency',
+        'low_frequency', 'uses_promotions'
+    ]
+    
+    # Encode categorical features
+    categorical_features = ['acquisition_channel', 'account_status']
+    
+    # Simple label encoding for baseline model
+    le = LabelEncoder()
+    encoded_categoricals = []
+    
+    for cat_col in categorical_features:
+        if cat_col in model_data.columns:
+            encoded_col = f"{cat_col}_encoded"
+            model_data[encoded_col] = le.fit_transform(model_data[cat_col].astype(str))
+            encoded_categoricals.append(encoded_col)
+
+    print(model_data.head())
+    # Final feature set
+    feature_columns = numeric_features + binary_features + encoded_categoricals
+    X = model_data[feature_columns]
+    y = model_data['churned']
+    
+    print(f"   • Features selected: {len(feature_columns)}")
+    print(f"   • Samples: {len(model_data):,} customers")
+    print(f"   • Target distribution: {(1-y.mean()):.1%} retained, {y.mean():.1%} churned")
+    
+    return X, y, feature_columns
+
+# Task: Add baseline model training and evaluation to complete end-to-end pipeline
+# Goal: Create working churn prediction model with performance metrics
+
+def train_baseline_model(X, y, feature_columns):
+    """
+    Train baseline logistic regression model for churn prediction.
+    """
+    
+    print("\n🤖 Training baseline logistic regression model...")
+    
+    # Check for missing values
+    #print(X.customer_id[X.days_since_last_order.isnull()])
+    print(X.columns)
+    
+    # Split data
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42, stratify=y
+    )
+    
+    print(f"   • Training set: {len(X_train):,} samples")
+    print(f"   • Test set: {len(X_test):,} samples")
+    
+    # Scale features
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+    
+    # Train logistic regression
+    model = LogisticRegression(random_state=42, max_iter=1000)
+    model.fit(X_train_scaled, y_train)
+    
+    # Make predictions
+    y_pred = model.predict(X_test_scaled)
+    y_pred_proba = model.predict_proba(X_test_scaled)[:, 1]
+    
+    # Calculate metrics
+    roc_auc = roc_auc_score(y_test, y_pred_proba)
+    
+    print("   ✅ Model trained successfully!")
+    print(f"   📊 ROC-AUC Score: {roc_auc:.3f}")
+    
+    # Print classification report
+    print("\n📈 Model Performance:")
+    print(classification_report(y_test, y_pred, target_names=['Retained', 'Churned']))
+    
+    # Feature importance (coefficients)    
+    feature_importance = pd.DataFrame({
+        'feature': feature_columns,
+        'coefficient': model.coef_[0]
+    }).sort_values('coefficient', key=abs, ascending=False)
+    
+    print("\n🔍 Top 5 Most Important Features:")
+    for idx, row in feature_importance.head().iterrows():
+        direction = "↑ Churn Risk" if row['coefficient'] > 0 else "↓ Churn Risk"
+        print(f"   • {row['feature']}: {row['coefficient']:.3f} ({direction})")
+    
+    return model, scaler, roc_auc# Commit 4: Implement baseline logistic regression model
+
 
 
 def main():
@@ -256,10 +397,24 @@ def main():
     print("\n✨ Commit 3 complete: Customer feature engineering pipeline ready!")
     print(f"📈 Ready for model training with {len(customer_features):,} customers and {len(customer_features.columns)-1} features")
     
-    return customer_features, validation_report
+    # Create churn target
+    churn_target = create_churn_target(cleaned_df)
+    
+    # Prepare data for modeling
+    X, y, feature_columns = prepare_model_data(customer_features, churn_target)
+
+    # Train baseline model
+    model, scaler, roc_auc = train_baseline_model(X, y, feature_columns)
+    
+    print("\n✨ Commit 4 complete: End-to-end churn prediction pipeline ready!")
+    print(f"🎯 Baseline model performance: ROC-AUC = {roc_auc:.3f}")
+    print(f"📊 Pipeline processes {len(customer_features):,} customers with {len(feature_columns)} features")
+    
+    return model, scaler, customer_features, roc_auc
+
 
 if __name__ == "__main__":
-    features, report = main()
+    model, scaler, features, auc_score = main()
     
     
     
