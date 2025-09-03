@@ -11,13 +11,16 @@ Created on Tue Aug 19 20:20:10 2025
 
 import pandas as pd
 import numpy as np
+import argparse
+
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score, classification_report
 
 class ChurnPredictionPipeline:
-    # def __init__(self):
+    def __init__(self, churn_method='fixed_threshold'):
+        self.churn_method = churn_method  # Sprint 2: Configure churn detection method
     #     self.raw_data = None
     #     self.clean_data = None
     #     self.customer_features = None
@@ -266,29 +269,73 @@ class ChurnPredictionPipeline:
         
         return final_features
     
-    def create_churn_target(self, df):
+    # SPRINT 2 - COMMIT 1: Make churn target method configurable
+    # Goal: Add method parameter to switch between fixed threshold and interpurchase analysis
+    # Story: Enable A/B testing between sprint 1 approach and new sprint 2 approach
+    
+    def create_churn_target(self, df, method='fixed_threshold', threshold_days=90):
         """
-        Create churn target variable based on business rules.
-        Define churn as customers who haven't ordered in 90+ days.
+        Create churn target variable using configurable methods.
+        
+        Parameters:
+        -----------
+        df : pandas.DataFrame
+            Customer transaction data
+        method : str
+            'fixed_threshold' (Sprint 1) or 'interpurchase_analysis' (Sprint 2)
+        threshold_days : int
+            Days for fixed threshold method (default: 90)
+        
+        Returns:
+        --------
+        pandas.DataFrame
+            Customer churn labels with method used
         """
-        print("\n🎯 Creating churn target variable...")
+        print(f"\n🎯 Creating churn target using method: {method}")
         
-        # Calculate analysis date (most recent order date)
-        analysis_date = df['order_date'].max()
+        # SPRINT 1 LOGIC: Fixed threshold approach (original implementation)
+        if method == 'fixed_threshold':
+
+            """
+            Create churn target variable based on business rules.
+            Define churn as customers who haven't ordered in 90+ days.
+            """
+            print("\n🎯 Creating churn target variable...")
+            
+            # Calculate analysis date (most recent order date)
+            analysis_date = df['order_date'].max()
+            
+            # Group by customer to find last order date
+            customer_last_order = df.groupby('customer_id')['order_date'].max().reset_index()
+            customer_last_order['days_since_last_order'] = (analysis_date - customer_last_order['order_date']).dt.days
+            
+            # Define churn: customers inactive for 90+ days
+            churn_threshold = 90
+            customer_last_order['churned'] = (customer_last_order['days_since_last_order'] >= churn_threshold).astype(int)
+            
+            churn_rate = customer_last_order['churned'].mean()
+            print(f"   • Churn threshold: {churn_threshold} days")
+            print(f"   • Churn rate: {churn_rate:.1%}")
+            
+            return customer_last_order[['customer_id', 'churned']]
         
-        # Group by customer to find last order date
-        customer_last_order = df.groupby('customer_id')['order_date'].max().reset_index()
-        customer_last_order['days_since_last_order'] = (analysis_date - customer_last_order['order_date']).dt.days
+        # SPRINT 2 LOGIC: Interpurchase analysis approach (to be implemented)
+        elif method == 'interpurchase_analysis':
+            print("   🔄 Using interpurchase time analysis")
+            print("   ⚠️  PLACEHOLDER: Will implement interpurchase logic in next commit")
+            
+            # PLACEHOLDER - For now, use same structure as sprint 1
+            analysis_date = df['order_date'].max()
+            customer_last_order = df.groupby('customer_id')['order_date'].max().reset_index()
+            customer_last_order['days_since_last_order'] = (analysis_date - customer_last_order['order_date']).dt.days
+            customer_last_order['churned'] = (customer_last_order['days_since_last_order'] >= threshold_days).astype(int)
+            
+            return customer_last_order[['customer_id', 'churned']]
         
-        # Define churn: customers inactive for 90+ days
-        churn_threshold = 90
-        customer_last_order['churned'] = (customer_last_order['days_since_last_order'] >= churn_threshold).astype(int)
-        
-        churn_rate = customer_last_order['churned'].mean()
-        print(f"   • Churn threshold: {churn_threshold} days")
-        print(f"   • Churn rate: {churn_rate:.1%}")
-        
-        return customer_last_order[['customer_id', 'churned']]
+        else:
+            raise ValueError(f"Unknown method: {method}. Use 'fixed_threshold' or 'interpurchase_analysis'")
+    
+
     
     def prepare_model_data(self, features_df, churn_df):
         """
@@ -416,7 +463,8 @@ class ChurnPredictionPipeline:
         # Step 4: Create features
         customer_features = self.create_customer_features(cleaned_data)
         
-        # Step 5: Create target
+        # Step 5: Create target (now configurable) 
+        churn_target = self.create_churn_target(cleaned_data, method=self.churn_method)
         churn_target = self.create_churn_target(cleaned_data)
         
         # Step 6: Prepare for modeling
@@ -430,7 +478,7 @@ class ChurnPredictionPipeline:
         print(f"🎯 Final Model Performance: ROC-AUC = {roc_auc:.3f}")
         print(f"📊 Pipeline processed {len(customer_features):,} customers")
         print(f"🔧 Using {len(feature_names)} behavioral features")
-        print("📈 Ready for the next sprint - sprint 2!")
+        #print("📈 Ready for the next sprint - sprint 2!")
         
         results = {
             'model': model,
@@ -445,8 +493,15 @@ class ChurnPredictionPipeline:
     
 # Run the complete pipeline
 if __name__ == "__main__":
+    
+    parser = argparse.ArgumentParser(description='Run churn prediction pipeline')
+    parser.add_argument('--method', choices=['fixed_threshold', 'interpurchase_analysis'], 
+                       default='fixed_threshold', help='Churn detection method')
+    
+    args = parser.parse_args()
+    
     # Initialize pipeline
-    pipeline = ChurnPredictionPipeline()
+    pipeline = ChurnPredictionPipeline(churn_method=args.method)
     
     # Run complete end-to-end process
     results = pipeline.run_complete_pipeline()
