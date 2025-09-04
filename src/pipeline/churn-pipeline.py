@@ -319,23 +319,83 @@ class ChurnPredictionPipeline:
             
             return customer_last_order[['customer_id', 'churned']]
         
-        # SPRINT 2 LOGIC: Interpurchase analysis approach (to be implemented)
-        elif method == 'interpurchase_analysis':
+        # SPRINT 2 LOGIC: Interpurchase analysis approach (implemented)
+        elif self.churn_method == 'interpurchase_analysis':
             print("   🔄 Using interpurchase time analysis")
-            print("   ⚠️  PLACEHOLDER: Will implement interpurchase logic in next commit")
             
-            # PLACEHOLDER - For now, use same structure as sprint 1
+            # Calculate analysis date
             analysis_date = df['order_date'].max()
-            customer_last_order = df.groupby('customer_id')['order_date'].max().reset_index()
-            customer_last_order['days_since_last_order'] = (analysis_date - customer_last_order['order_date']).dt.days
-            customer_last_order['churned'] = (customer_last_order['days_since_last_order'] >= threshold_days).astype(int)
             
-            return customer_last_order[['customer_id', 'churned']]
-        
+            # Calculate interpurchase times for each customer
+            print("   📊 Calculating customer-specific interpurchase intervals...")
+            
+            interpurchase_data = []
+            
+            for customer_id in df['customer_id'].unique():
+                customer_orders = df[df['customer_id'] == customer_id]['order_date'].sort_values()
+                
+                if len(customer_orders) < 2:
+                    # Single purchase customers - use global average or flag as high risk
+                    interpurchase_data.append({
+                        'customer_id': customer_id,
+                        'last_order_date': customer_orders.iloc[-1],
+                        'avg_interpurchase_days': None,  # No pattern available
+                        'expected_next_purchase': None,
+                        'purchase_count': len(customer_orders)
+                    })
+                else:
+                    # Calculate interpurchase intervals
+                    intervals = customer_orders.diff().dt.days.dropna()
+                    avg_interval = intervals.mean()
+                    
+                    # Expected next purchase date
+                    expected_next = customer_orders.iloc[-1] + pd.Timedelta(days=avg_interval)
+                    
+                    interpurchase_data.append({
+                        'customer_id': customer_id,
+                        'last_order_date': customer_orders.iloc[-1],
+                        'avg_interpurchase_days': avg_interval,
+                        'expected_next_purchase': expected_next,
+                        'purchase_count': len(customer_orders)
+                    })
+            
+            # Convert to DataFrame
+            interpurchase_df = pd.DataFrame(interpurchase_data)
+            
+            # Calculate days since last order and days overdue
+            interpurchase_df['days_since_last_order'] = (analysis_date - interpurchase_df['last_order_date']).dt.days
+            
+            # Define churn logic based on customer patterns
+            def determine_churn(row):
+                # Single purchase customers: churn if inactive > 180 days
+                if row['purchase_count'] == 1:
+                    return 1 if row['days_since_last_order'] > 180 else 0
+                
+                # Multi-purchase customers: churn if overdue by 2x their avg interval
+                if pd.notna(row['avg_interpurchase_days']):
+                    days_overdue = row['days_since_last_order'] - row['avg_interpurchase_days']
+                    churn_threshold = row['avg_interpurchase_days']  # 1x their average interval
+                    return 1 if days_overdue > churn_threshold else 0
+                
+                # Fallback to fixed threshold
+                return 1 if row['days_since_last_order'] > 90 else 0
+            
+            interpurchase_df['churned'] = interpurchase_df.apply(determine_churn, axis=1)
+            
+            # Print summary statistics
+            churn_rate = interpurchase_df['churned'].mean()
+            single_purchase_customers = (interpurchase_df['purchase_count'] == 1).sum()
+            
+            print(f"   • Customers analyzed: {len(interpurchase_df):,}")
+            print(f"   • Single purchase customers: {single_purchase_customers:,}")
+            print(f"   • Multi-purchase customers: {len(interpurchase_df) - single_purchase_customers:,}")
+            print(f"   • Churn rate: {churn_rate:.1%}")
+            
+            return interpurchase_df[['customer_id', 'churned']]
         else:
             raise ValueError(f"Unknown method: {method}. Use 'fixed_threshold' or 'interpurchase_analysis'")
-    
-
+            
+        
     
     def prepare_model_data(self, features_df, churn_df):
         """
