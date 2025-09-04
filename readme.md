@@ -45,15 +45,17 @@ SQL access or flat-file data sources
 ### Installation
 ```bash
 # Clone the repo
-git clone https://github.com/username/clv-retention-optimizer.git
-cd clv-retention-optimizer
+git clone https://github.com/nihemelandu/customer-lifetime-value.git
+cd customer-lifetime-value
 
+<!--
 # Setup virtual environment
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
+-->
 
 # Run test suite
 pytest tests/
@@ -161,19 +163,12 @@ clv-retention-optimizer/
 
 ## 📓 Usage Examples
 
-### Predict Churn & CLV
-```python
-from src.churn import ChurnPredictor
-from src.clv import CLVEstimator
-from src.data.loader import load_customer_data
+### 🎯 Predict Churn & CLV
 
-df = load_customer_data('data/processed/customers.csv')
-
-churn_model = ChurnPredictor()
-churn_scores = churn_model.predict(df)
-
-clv_model = CLVEstimator()
-clv_scores = clv_model.predict(df)
+Run the churn prediction pipeline using different churn labeling methods:
+```bash
+  python churn-pipeline.py --method fixed_threshold
+  python churn-pipeline.py --method interpurchase_analysis
 ```
 
 ### Simulate Messaging Impact
